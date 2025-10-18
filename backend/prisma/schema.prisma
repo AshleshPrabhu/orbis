@@ -333,26 +333,31 @@ model Form {
   createdAt     DateTime          @default(now())
   updatedAt     DateTime          @updatedAt
   isActive      Boolean           @default(true)
-  slug          String            @unique
-  isTemplate    Boolean           @default(false) 
+  isEditable     Boolean           @default(false)
   creator       User              @relation("UserForms", fields: [createdBy], references: [id])
   contributors  FormContributor[]
   fields        FormField[]
   responses     FormResponse[]
 }
 
+enum PermissionLevel {
+  VIEW
+  EDIT
+}
+
 model FormContributor {
-  id        String   @id @default(cuid())
+  id        Int   @id @default(autoincrement())
   formId    String
   userId    String
   addedAt   DateTime @default(now())
+  permission PermissionLevel @default(VIEW)
   form      Form     @relation(fields: [formId], references: [id])
   user      User     @relation(fields: [userId], references: [id])
   @@unique([formId, userId])
 }
 
 model FormField {
-  id            String   @id @default(cuid())
+  id            Int      @id @default(autoincrement())
   formId        String
   label         String
   fieldType     FieldType
@@ -364,7 +369,7 @@ model FormField {
   validation    Json?    
   conditions    Json?    
   form          Form     @relation(fields: [formId], references: [id])
-  answers       FieldAnswer[]
+  answers       FieldAnswer[] 
 }
 
 enum FieldType {
@@ -382,9 +387,9 @@ enum FieldType {
 
 
 model FormResponse {
-  id            String     @id @default(cuid())
+  id            Int       @id @default(autoincrement())
   formId        String
-  submittedAt   DateTime   @default(now())
+  submittedAt   DateTime  @default(now())
   submittedBy   String?   
   responderIp   String?
   userAgent     String?
@@ -395,9 +400,9 @@ model FormResponse {
 }
 
 model FieldAnswer {
-  id           String     @id @default(cuid())
-  responseId   String
-  fieldId      String
+  id           Int       @id @default(autoincrement())
+  responseId   Int
+  fieldId      Int
   answerValue  String?    
   answerJson   Json? 
   response     FormResponse @relation(fields: [responseId], references: [id])
