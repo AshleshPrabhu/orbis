@@ -24,6 +24,9 @@ model User {
   applications   Application[]
   createdEvents  Event[]
   teamMembers    TeamMember[]
+  formsCreated   Form[]           @relation("UserForms")
+  contributions  FormContributor[]
+  formResponses  FormResponse[]   @relation("UserFormResponses")
 }
 
 model UserProfile {
@@ -319,4 +322,84 @@ enum EventPersonRole {
 enum TeamMemberRole {
   LEADER
   MEMBER
+}
+
+model Form {
+  id            String            @id @default(cuid())
+  title         String
+  description   String?
+  createdBy     String
+  formUrl       String            @unique
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  isActive      Boolean           @default(true)
+  slug          String            @unique
+  isTemplate    Boolean           @default(false) 
+  creator       User              @relation("UserForms", fields: [createdBy], references: [id])
+  contributors  FormContributor[]
+  fields        FormField[]
+  responses     FormResponse[]
+}
+
+model FormContributor {
+  id        String   @id @default(cuid())
+  formId    String
+  userId    String
+  addedAt   DateTime @default(now())
+  form      Form     @relation(fields: [formId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  @@unique([formId, userId])
+}
+
+model FormField {
+  id            String   @id @default(cuid())
+  formId        String
+  label         String
+  fieldType     FieldType
+  isRequired    Boolean  @default(false)
+  options       Json?  
+  position      Int
+  placeholder   String?
+  helpText      String?
+  validation    Json?    
+  conditions    Json?    
+  form          Form     @relation(fields: [formId], references: [id])
+  answers       FieldAnswer[]
+}
+
+enum FieldType {
+  TEXT
+  NUMBER
+  EMAIL
+  MULTIPLE_CHOICE
+  CHECKBOX
+  SINGLE_CHOICE
+  FILE
+  DATE
+  STAR_RATING
+  DROPDOWN
+}
+
+
+model FormResponse {
+  id            String     @id @default(cuid())
+  formId        String
+  submittedAt   DateTime   @default(now())
+  submittedBy   String?   
+  responderIp   String?
+  userAgent     String?
+  metadata      Json?      
+  form          Form       @relation(fields: [formId], references: [id])
+  user          User?      @relation("UserFormResponses", fields: [submittedBy], references: [id])
+  answers       FieldAnswer[]
+}
+
+model FieldAnswer {
+  id           String     @id @default(cuid())
+  responseId   String
+  fieldId      String
+  answerValue  String?    
+  answerJson   Json? 
+  response     FormResponse @relation(fields: [responseId], references: [id])
+  field        FormField    @relation(fields: [fieldId], references: [id])
 }
