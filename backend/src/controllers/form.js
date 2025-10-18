@@ -354,5 +354,113 @@ export const deleteForm = async (req, res) => {
     }
 };
 
+export const getAllForms = async (req, res) => {
+    try {
+        const user = ensureAuth(req);
+        const forms = await prisma.form.findMany({
+            where: {
+                OR: [  
+                    { createdBy: user.id },
+                    { contributors: { some: { userId: user.id } } }
+                ]
+            }
+        });
+        res.status(200).json(forms);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch forms: ' + error });
+    }
+}
+
+export const getFormByUrl = async (req, res) => {
+    try {
+        const { formUrl } = req.params;
+        const user = ensureAuth(req);
+
+        const form = await prisma.form.findUnique({
+            where: { formUrl },
+            include: {
+                fields: {
+                    include: {
+                        answers: {
+                            include: {
+                                response: {
+                                    select: {
+                                        id: true,
+                                        submittedAt: true,
+                                        user: { select: { id: true, name: true, email: true } },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+                contributors: {
+                    select: {
+                        userId: true,
+                        permission: true,
+                        user: { select: { id: true, name: true, email: true } },
+                    },
+                },
+                creator: { select: { id: true, name: true, email: true } },
+            },
+            });
 
 
+        if (!form) return res.status(404).json({ error: 'Form not found' });
+
+        const isOwner = form.createdBy === user.id;
+        const isContributor = form.contributors.some(c => c.userId === user.id);
+        if (!isOwner && !isContributor) {
+            return res.status(403).json({ error: 'Permission denied' });
+        }
+
+        const responseWise = form.responses.map(response => ({
+            responseId: response.id,
+            submittedAt: response.submittedAt,
+            responderIp: response.responderIp,
+            userAgent: response.userAgent,
+            submittedBy: response.user ? { id: response.user.id, name: response.user.name, email: response.user.email } : null,
+            answers: response.answers.map(ans => ({
+                fieldId: ans.fieldId,
+                fieldLabel: ans.field.label,
+                fieldType: ans.field.fieldType,
+                answerValue: ans.answerValue,
+                answerJson: ans.answerJson
+            }))
+        }));
+
+        const questionWise = form.fields.map(field => ({
+            id: field.id,
+            label: field.label,
+            fieldType: field.fieldType,
+            answers: field.answers.map(ans => ({
+                responseId: ans.response.id,
+                submittedAt: ans.response.submittedAt,
+                submittedBy: ans.response.user
+                ? { id: ans.response.user.id, name: ans.response.user.name, email: ans.response.user.email }
+                : null,
+                answerValue: ans.answerValue,
+                answerJson: ans.answerJson,
+            })),
+        }));
+
+        res.status(200).json({
+            id: form.id,
+            title: form.title,
+            formUrl: form.formUrl,
+            description: form.description,
+            isActive: form.isActive,
+            isTemplate: form.isTemplate,
+            isEditable: form.isEditable,
+            fields: form.fields,
+            contributors: form.contributors,
+            creator: form.creator,
+            responsesCount: form.responses.length,
+            responseWise,
+            questionWise
+        });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch form: ' + error });
+    }
+};
