@@ -17,6 +17,12 @@ import { NavigationProvider } from './contexts/NavigationContext';
 import OrganiserDashboard from './pages/OrganiserDashboard.jsx';
 import EventDashboard from './pages/EventDashboard.jsx';
 
+// Import form components
+import FormsPage from './pages/FormsPage';
+import CreateForm from './pages/CreateForm';
+import EditForm from './pages/EditForm';
+import FormSubmission from './components/FormSubmission';
+
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
 
@@ -98,6 +104,34 @@ const App = () => {
                 <Route path="/events/:id/apply" element={<ApplyForm />} />  {/* NEW ROUTE */}
                 <Route path="/org-dashboard" element={<OrganiserDashboard />} />
                 <Route path="/event-dashboard/:id" element={<EventDashboard />} />
+                
+                {/* Forms Routes */}
+                <Route 
+                  path="/forms" 
+                  element={
+                    <ProtectedRoute>
+                      <FormsPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/forms/create" 
+                  element={
+                    <ProtectedRoute>
+                      <CreateForm />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/forms/edit/:id" 
+                  element={
+                    <ProtectedRoute>
+                      <EditForm />
+                    </ProtectedRoute>
+                  } 
+                />
+                {/* Public form submission route */}
+                <Route path="/form/:formUrl" element={<FormSubmission />} />
               </Routes>
             </main>
             <Footer />

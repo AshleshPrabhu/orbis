@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Button from './Button';
 
 const Navbar = () => {
   const { isAuthenticated, logout, user, login } = useAuth();
+  const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const canCreateEvent = user?.role === 'ORGANIZER';
@@ -74,6 +75,11 @@ const Navbar = () => {
             <Link to="/events" className="text-sm text-gray-500 hover:text-black transition-colors tracking-wide">
               Events
             </Link>
+            {isAuthenticated && (
+              <Link to="/forms" className="text-sm text-gray-500 hover:text-black transition-colors tracking-wide">
+                Forms
+              </Link>
+            )}
             <a href="/#testimonials" className="text-sm text-gray-500 hover:text-black transition-colors tracking-wide">
               Testimonials
             </a>
@@ -87,6 +93,7 @@ const Navbar = () => {
             {isAuthenticated ? (
               <>
                 <Button variant="text" to="/profile">Profile</Button>
+                <Button variant="secondary" to="/forms/create">Create Form</Button>
                 <Button variant="primary" onClick={() => logout()}>Logout</Button>
               </>
             ) : (
@@ -118,6 +125,15 @@ const Navbar = () => {
               >
                 Events
               </Link>
+              {isAuthenticated && (
+                <Link 
+                  to="/forms" 
+                  className="text-lg text-gray-500 hover:text-black transition-colors px-4 py-2 rounded-lg hover:bg-gray-50"
+                  onClick={() => handleMobileMenuClick()}
+                >
+                  Forms
+                </Link>
+              )}
               <a 
                 href="/#testimonials" 
                 className="text-lg text-gray-500 hover:text-black transition-colors px-4 py-2 rounded-lg hover:bg-gray-50"
@@ -136,6 +152,14 @@ const Navbar = () => {
                       onClick={() => handleMobileMenuClick()}
                     >
                       Profile
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      to="/forms/create"
+                      className="w-full"
+                      onClick={() => handleMobileMenuClick()}
+                    >
+                      Create Form
                     </Button>
                     <Button
                       variant="primary" 
