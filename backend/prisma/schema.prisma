@@ -362,6 +362,7 @@ model FormField {
   label         String
   fieldType     FieldType
   isRequired    Boolean  @default(false)
+  allowMultiple Boolean  @default(false)
   options       Json?  
   position      Int
   placeholder   String?
@@ -390,10 +391,8 @@ model FormResponse {
   id            Int       @id @default(autoincrement())
   formId        String
   submittedAt   DateTime  @default(now())
-  submittedBy   String?   
-  responderIp   String?
-  userAgent     String?
-  metadata      Json?      
+  submittedBy   String?
+  anonymousId   String? 
   form          Form       @relation(fields: [formId], references: [id])
   user          User?      @relation("UserFormResponses", fields: [submittedBy], references: [id])
   answers       FieldAnswer[]

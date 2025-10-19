@@ -121,16 +121,17 @@ export const createForm = async (req,res)=>{
 
             if (fields.length > 0) {
                 const fieldsData = fields.map(f => ({
-                formId: form.id,
-                label: f.label,
-                fieldType: f.fieldType,
-                position: f.position,
-                placeholder: f.placeholder || null,
-                isRequired: f.isRequired || false,
-                helpText: f.helpText || null,
-                options: f.options ? (typeof f.options === "string" ? JSON.parse(f.options) : f.options) : null,
-                validation: f.validation ? (typeof f.validation === "string" ? JSON.parse(f.validation) : f.validation) : null,
-                conditions: f.conditions ? (typeof f.conditions === "string" ? JSON.parse(f.conditions) : f.conditions) : null,
+                    formId: form.id,
+                    label: f.label,
+                    fieldType: f.fieldType,
+                    position: f.position,
+                    placeholder: f.placeholder || null,
+                    isRequired: f.isRequired || false,
+                    allowMultiple: f.allowMultiple || false,
+                    helpText: f.helpText || null,
+                    options: f.options ? (typeof f.options === "string" ? JSON.parse(f.options) : f.options) : null,
+                    validation: f.validation ? (typeof f.validation === "string" ? JSON.parse(f.validation) : f.validation) : null,
+                    conditions: f.conditions ? (typeof f.conditions === "string" ? JSON.parse(f.conditions) : f.conditions) : null,
                 }));
 
                 await tx.formField.createMany({ data: fieldsData });
@@ -224,6 +225,7 @@ export const updateForm = async (req, res) => {
                     if (existingField.position !== field.position) updateData.position = field.position;
                     if (existingField.placeholder !== field.placeholder) updateData.placeholder = field.placeholder || null;
                     if (existingField.isRequired !== field.isRequired) updateData.isRequired = field.isRequired || false;
+                    if (existingField.allowMultiple !== field.allowMultiple) updateData.allowMultiple = field.allowMultiple || false;
                     if (existingField.helpText !== field.helpText) updateData.helpText = field.helpText || null;
                     if (JSON.stringify(existingField.options) !== JSON.stringify(field.options))
                         updateData.options = typeof field.options === "string" ? JSON.parse(field.options) : field.options;
@@ -245,6 +247,7 @@ export const updateForm = async (req, res) => {
                         position: field.position,
                         placeholder: field.placeholder || null,
                         isRequired: field.isRequired || false,
+                        allowMultiple: field.allowMultiple || false,
                         helpText: field.helpText || null,
                         options: field.options ? (typeof field.options === "string" ? JSON.parse(field.options) : field.options) : null,
                         validation: field.validation ? (typeof field.validation === "string" ? JSON.parse(field.validation) : field.validation) : null,
@@ -302,7 +305,6 @@ export const updateForm = async (req, res) => {
         res.status(500).json({ error: 'Failed to update form: ' + error });
     }
 };
-
 
 export const deleteForm = async (req, res) => {
     try {
@@ -462,5 +464,349 @@ export const getFormByUrl = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ error: 'Failed to fetch form: ' + error });
+    }
+};
+
+export const getFormForDisplay = async (req, res) => {
+    try {
+        const { formUrl } = req.params;
+
+        const form = await prisma.form.findUnique({
+            where: { formUrl },
+            include: {
+                fields: {
+                    orderBy: { position: 'asc' },
+                    select: {
+                        id: true,
+                        label: true,
+                        fieldType: true,
+                        isRequired: true,
+                        placeholder: true,
+                        helpText: true,
+                        options: true,
+                        validation: true,
+                        conditions: true,
+                    }
+                },
+                creator: {
+                    select: { id: true, name: true, email: true }
+                }
+            }
+        });
+
+        if (!form || !form.isActive) {
+            return res.status(404).json({ error: "Form not found or inactive" });
+        }
+
+        const formattedFields = form.fields.map(field => ({
+            id: field.id,
+            label: field.label,
+            type: field.fieldType,
+            isRequired: field.isRequired,
+            placeholder: field.placeholder || '',
+            helpText: field.helpText || '',
+            options: field.options ? (typeof field.options === 'string' ? JSON.parse(field.options) : field.options) : [],
+            validation: field.validation ? (typeof field.validation === 'string' ? JSON.parse(field.validation) : field.validation) : {},
+            conditions: field.conditions ? (typeof field.conditions === 'string' ? JSON.parse(field.conditions) : field.conditions) : {}
+        }));
+
+        res.status(200).json({
+            form: {
+                id: form.id,
+                title: form.title,
+                description: form.description,
+                isEditable: form.isEditable,
+                createdAt: form.createdAt,
+                creator: form.creator,
+                fields: formattedFields
+            }
+        });
+
+    } catch (error) {
+        console.error('Error fetching form:', error);
+        res.status(500).json({ error: 'Failed to fetch form: ' + error.message });
+    }
+};
+
+export const createFormResponse = async (req, res) => {
+    try {
+        const { formUrl } = req.params;
+        const { answers, submittedBy } = req.body;
+
+        const form = await prisma.form.findUnique({
+            where: { formUrl },
+            include: { fields: true },
+        });
+
+        if (!form) {
+            return res.status(404).json({ error: "Form not found" });
+        }
+
+        if (!Array.isArray(answers) || answers.length === 0) {
+            return res.status(400).json({ error: "Answers array is required" });
+        }
+        const id = crypto.randomBytes(6).toString('hex').toUpperCase();
+
+        let anonymousId = null;
+        if (!submittedBy) {
+            if(form.isEditable) anonymousId = id;
+        }
+
+        const response = await prisma.formResponse.create({
+            data: {
+                formId: form.id,
+                submittedBy: submittedBy || null,
+                anonymousId,
+                userAgent,
+            },
+        });
+
+        const fieldAnswersData = [];
+
+        for (const ans of answers) {
+            const field = form.fields.find(f => f.id === ans.fieldId);
+            if (!field) {
+                return res.status(400).json({ error: `Invalid fieldId: ${ans.fieldId}` });
+            }
+
+            const allowedValues = Array.isArray(field.options)
+            ? field.options
+            : field.options?.values || [];
+
+            if (["TEXT"].includes(field.fieldType)) {
+                if (!ans.answerValue || typeof ans.answerValue !== "string") {
+                    return res.status(400).json({ error: `Text answer required for "${field.label}".` });
+                }
+            } 
+            else if (["SINGLE_CHOICE", "DROPDOWN"].includes(field.fieldType)) {
+                if (!allowedValues.includes(String(ans.answerValue))) {
+                    return res.status(400).json({ error: `Invalid option for "${field.label}".` });
+                }
+            } 
+            else if (["MULTIPLE_CHOICE", "CHECKBOXES"].includes(field.fieldType)) {
+                const allowMultiple = field.allowMultiple ?? true;
+                const selections = Array.isArray(ans.answerJson)
+                ? ans.answerJson
+                : ans.answerValue
+                ? [ans.answerValue]
+                : [];
+
+                if (selections.length === 0) {
+                    return res.status(400).json({ error: `At least one option required for "${field.label}".` });
+                }
+
+                if (!allowMultiple && selections.length > 1) {
+                    return res.status(400).json({ error: `"${field.label}" allows only one selection.` });
+                }
+
+                for (const val of selections) {
+                    if (!allowedValues.includes(String(val))) {
+                        return res.status(400).json({ error: `Invalid option "${val}" in "${field.label}".` });
+                    }
+                }
+
+                fieldAnswersData.push({
+                    responseId: response.id,
+                    fieldId: field.id,
+                    answerJson: selections,
+                });
+                continue;
+            }
+
+            fieldAnswersData.push({
+                responseId: response.id,
+                fieldId: field.id,
+                answerValue: ans.answerValue ?? null,
+            });
+        }
+
+        
+        await prisma.fieldAnswer.createMany({
+            data: fieldAnswersData,
+        });
+
+        if(form.isEditable){
+            res.status(201).json({
+                responseId: response.id,
+                anonymousId,
+            });
+        }else{
+            res.status(201).json({ message: "Form response submitted successfully" });
+        }
+    } catch (error) {
+        res.status(500).json({ error: "Failed to submit form response: " + error });
+    }
+};
+
+export const updateFormResponse = async (req, res) => {
+    try {
+        const { formUrl } = req.params;
+        const { answers, submittedBy, anonymousId } = req.body;
+
+        const form = await prisma.form.findUnique({
+            where: { formUrl },
+            include: { fields: true },
+        });
+
+        if (!form) {
+            return res.status(404).json({ error: "Form not found" });
+        }
+
+        if (!form.isEditable) {
+            return res.status(200).json({ message: "This form cannot be edited." });
+        }
+
+        if(!submittedBy && !anonymousId){
+            return res.status(403).json({ error: "Missing credentials to edit response." });
+        }
+
+        const response = await prisma.formResponse.findUnique({
+            where: { 
+                OR: [
+                    { submittedBy: submittedBy },
+                    { anonymousId: anonymousId }
+                ]
+            },
+            include: { answers: true },
+        });
+
+        if (!response) {
+            return res.status(404).json({ error: "Response not found" });
+        }
+
+        if (!Array.isArray(answers) || answers.length === 0) {
+            return res.status(400).json({ error: "Answers array is required." });
+        }
+
+        const fieldAnswersData = [];
+
+        for (const ans of answers) {
+        const field = form.fields.find(f => f.id === ans.fieldId);
+        if (!field) {
+            return res.status(400).json({ error: `Invalid fieldId: ${ans.fieldId}` });
+        }
+
+        const allowedValues = Array.isArray(field.options)
+            ? field.options
+            : field.options?.values || [];
+
+        if (["TEXT"].includes(field.fieldType)) {
+            if (!ans.answerValue || typeof ans.answerValue !== "string") {
+                return res.status(400).json({ error: `Text answer required for "${field.label}".` });
+            }
+        } 
+        else if (["SINGLE_CHOICE", "DROPDOWN"].includes(field.fieldType)) {
+            if (!allowedValues.includes(String(ans.answerValue))) {
+                return res.status(400).json({ error: `Invalid option for "${field.label}".` });
+            }
+        } 
+        else if (["MULTIPLE_CHOICE", "CHECKBOXES"].includes(field.fieldType)) {
+            const allowMultiple = field.allowMultiple ?? true;
+            const selections = Array.isArray(ans.answerJson)
+            ? ans.answerJson
+            : ans.answerValue
+            ? [ans.answerValue]
+            : [];
+
+            if (selections.length === 0) {
+                return res.status(400).json({ error: `At least one option required for "${field.label}".` });
+            }
+
+            if (!allowMultiple && selections.length > 1) {
+                return res.status(400).json({ error: `"${field.label}" allows only one selection.` });
+            }
+
+            for (const val of selections) {
+                if (!allowedValues.includes(String(val))) {
+                    return res.status(400).json({ error: `Invalid option "${val}" in "${field.label}".` });
+                }
+            }
+
+            fieldAnswersData.push({
+                responseId: response.id,
+                fieldId: field.id,
+                answerJson: selections,
+            });
+            continue;
+        }
+
+        fieldAnswersData.push({
+            responseId: response.id,
+            fieldId: field.id,
+            answerValue: ans.answerValue ?? null,
+        });
+        }
+
+        await prisma.$transaction(async tx => {
+            await tx.fieldAnswer.deleteMany({
+                where: { responseId: response.id },
+            });
+
+            await tx.fieldAnswer.createMany({
+                data: fieldAnswersData,
+            });
+
+            await tx.formResponse.update({
+                where: { id: response.id },
+                data: { submittedAt: new Date() },
+            });
+        });
+
+        res.status(200).json({
+            responseId: response.id,
+        });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update form response: " + error });
+    }
+};
+
+export const getFormResponses = async (req, res) => {
+    try {
+        const { formUrl } = req.params;
+        const { submittedBy, anonymousId } = req.body;
+
+        const form = await prisma.form.findUnique({
+            where: { formUrl },
+            include: {
+                fields: true,
+                responses: {
+                    include: {
+                        answers: {
+                            include: { field: { select: { id: true, label: true, fieldType: true } } }
+                        },
+                        user: { select: { id: true, name: true, email: true } }
+                    }
+                },
+                creator: { select: { id: true } },
+            }
+        });
+
+        if (!form) return res.status(404).json({ error: "Form not found" });
+        if (!form.isEditable) {
+            return res.status(200).json({ message: "This form's responses are not editable." });
+        }
+        const allowedResponses = form.responses.filter(r => r.anonymousId === anonymousId || r.submittedBy === submittedBy);
+
+        if (!allowedResponses.length) {
+            return res.status(403).json({ error: "No editable responses found for this user" });
+        }
+
+        const responseWise = allowedResponses.map(response => ({
+            responseId: response.id,
+            submittedAt: response.submittedAt,
+            submittedBy: response.user ? { id: response.user.id, name: response.user.name, email: response.user.email } : null,
+            answers: response.answers.map(ans => ({
+                fieldId: ans.fieldId,
+                fieldLabel: ans.field.label,
+                fieldType: ans.field.fieldType,
+                answerValue: ans.answerValue ?? null,
+                answerJson: ans.answerJson ?? null
+            }))
+        }));
+
+        res.status(200).json({ formId: form.id, title: form.title, responseWise });
+
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch form responses: " + error });
     }
 };
