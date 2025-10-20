@@ -79,17 +79,6 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
           />
         );
       
-      case 'TEXTAREA':
-        return (
-          <textarea
-            placeholder={field.placeholder || "Enter your response..."}
-            value={responses[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            rows="5"
-            className={`${baseInputClass} resize-none`}
-          />
-        );
-      
       case 'EMAIL':
         return (
           <input
@@ -112,42 +101,10 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
           />
         );
       
-      case 'PHONE':
-        return (
-          <input
-            type="tel"
-            placeholder={field.placeholder || "Enter phone number..."}
-            value={responses[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className={baseInputClass}
-          />
-        );
-      
       case 'DATE':
         return (
           <input
             type="date"
-            value={responses[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className={baseInputClass}
-          />
-        );
-      
-      case 'TIME':
-        return (
-          <input
-            type="time"
-            value={responses[field.id] || ''}
-            onChange={(e) => handleFieldChange(field.id, e.target.value)}
-            className={baseInputClass}
-          />
-        );
-      
-      case 'URL':
-        return (
-          <input
-            type="url"
-            placeholder={field.placeholder || "https://example.com"}
             value={responses[field.id] || ''}
             onChange={(e) => handleFieldChange(field.id, e.target.value)}
             className={baseInputClass}
@@ -176,7 +133,7 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
           </div>
         );
       
-      case 'CHECKBOXES':
+      case 'CHECKBOX':
         return (
           <div className="space-y-3">
             {(field.options || []).map((option, index) => (
@@ -203,6 +160,28 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
           </div>
         );
       
+      case 'SINGLE_CHOICE':
+        return (
+          <div className="space-y-3">
+            {(field.options || []).map((option, index) => (
+              <label 
+                key={index} 
+                className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                <input
+                  type="radio"
+                  name={`field-${field.id}`}
+                  value={option.value}
+                  checked={responses[field.id] === option.value}
+                  onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                  className="w-4 h-4 text-black focus:ring-black"
+                />
+                <span className="text-gray-800 font-medium">{option.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+      
       case 'DROPDOWN':
         return (
           <select 
@@ -219,7 +198,7 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
           </select>
         );
       
-      case 'FILE_UPLOAD':
+      case 'FILE':
         return (
           <div 
             className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${

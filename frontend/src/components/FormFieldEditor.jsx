@@ -5,37 +5,31 @@ import Button from './Button';
 const getFieldIcon = (fieldType) => {
   const icons = {
     'TEXT': '📝',
-    'TEXTAREA': '📄',
-    'EMAIL': '📧',
     'NUMBER': '🔢',
-    'PHONE': '📞',
-    'DATE': '📅',
-    'TIME': '⏰',
+    'EMAIL': '�',
     'MULTIPLE_CHOICE': '⚪',
-    'CHECKBOXES': '☑️',
-    'DROPDOWN': '📋',
-    'FILE_UPLOAD': '📎',
-    'URL': '🔗',
-    'STAR_RATING': '⭐'
+    'CHECKBOX': '☑️',
+    'SINGLE_CHOICE': '�',
+    'FILE': '📎',
+    'DATE': '�',
+    'STAR_RATING': '⭐',
+    'DROPDOWN': '📋'
   };
   return icons[fieldType] || '❓';
 };
 
 const getFieldTypeName = (fieldType) => {
   const names = {
-    'TEXT': 'Short Text',
-    'TEXTAREA': 'Long Text',
-    'EMAIL': 'Email',
+    'TEXT': 'Text',
     'NUMBER': 'Number',
-    'PHONE': 'Phone',
-    'DATE': 'Date',
-    'TIME': 'Time',
+    'EMAIL': 'Email',
     'MULTIPLE_CHOICE': 'Multiple Choice',
-    'CHECKBOXES': 'Checkboxes',
-    'DROPDOWN': 'Dropdown',
-    'FILE_UPLOAD': 'File Upload',
-    'URL': 'URL',
-    'STAR_RATING': 'Star Rating'
+    'CHECKBOX': 'Checkboxes',
+    'SINGLE_CHOICE': 'Single Choice',
+    'FILE': 'File Upload',
+    'DATE': 'Date',
+    'STAR_RATING': 'Star Rating',
+    'DROPDOWN': 'Dropdown'
   };
   return names[fieldType] || fieldType.replace('_', ' ');
 };
@@ -90,16 +84,6 @@ const FormFieldEditor = ({
           />
         );
       
-      case 'TEXTAREA':
-        return (
-          <textarea
-            placeholder={field.placeholder || "Enter your response..."}
-            disabled
-            rows="4"
-            className={`${baseInputClass} resize-none`}
-          />
-        );
-      
       case 'EMAIL':
         return (
           <input
@@ -120,39 +104,10 @@ const FormFieldEditor = ({
           />
         );
       
-      case 'PHONE':
-        return (
-          <input
-            type="tel"
-            placeholder={field.placeholder || "Enter phone number..."}
-            disabled
-            className={baseInputClass}
-          />
-        );
-      
       case 'DATE':
         return (
           <input
             type="date"
-            disabled
-            className={baseInputClass}
-          />
-        );
-      
-      case 'TIME':
-        return (
-          <input
-            type="time"
-            disabled
-            className={baseInputClass}
-          />
-        );
-      
-      case 'URL':
-        return (
-          <input
-            type="url"
-            placeholder={field.placeholder || "https://example.com"}
             disabled
             className={baseInputClass}
           />
@@ -175,7 +130,7 @@ const FormFieldEditor = ({
           </div>
         );
       
-      case 'CHECKBOXES':
+      case 'CHECKBOX':
         return (
           <div className="space-y-3">
             {(field.options || []).map((option, index) => (
@@ -184,6 +139,23 @@ const FormFieldEditor = ({
                   type="checkbox"
                   disabled
                   className="w-4 h-4 text-black rounded"
+                />
+                <span className="text-gray-700">{option.label}</span>
+              </label>
+            ))}
+          </div>
+        );
+      
+      case 'SINGLE_CHOICE':
+        return (
+          <div className="space-y-3">
+            {(field.options || []).map((option, index) => (
+              <label key={index} className="flex items-center space-x-3">
+                <input
+                  type="radio"
+                  name={`field-${field.id}`}
+                  disabled
+                  className="w-4 h-4 text-black"
                 />
                 <span className="text-gray-700">{option.label}</span>
               </label>
@@ -203,7 +175,7 @@ const FormFieldEditor = ({
           </select>
         );
       
-      case 'FILE_UPLOAD':
+      case 'FILE':
         return (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
             <div className="text-3xl mb-2">📎</div>
@@ -324,7 +296,7 @@ const FormFieldEditor = ({
             </div>
 
             {/* Placeholder (for text inputs) */}
-            {['TEXT', 'TEXTAREA', 'EMAIL', 'NUMBER', 'PHONE', 'URL'].includes(field.fieldType) && (
+            {['TEXT', 'EMAIL', 'NUMBER'].includes(field.fieldType) && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Placeholder Text
@@ -340,7 +312,7 @@ const FormFieldEditor = ({
             )}
 
             {/* Options (for choice fields) */}
-            {['MULTIPLE_CHOICE', 'CHECKBOXES', 'DROPDOWN'].includes(field.fieldType) && (
+            {['MULTIPLE_CHOICE', 'CHECKBOX', 'SINGLE_CHOICE', 'DROPDOWN'].includes(field.fieldType) && (
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                   Options

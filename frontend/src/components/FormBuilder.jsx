@@ -165,19 +165,16 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
   };
 
   const fieldTypes = [
-    { type: 'TEXT', label: 'Short Text', icon: '📝', description: 'Single line text input' },
-    { type: 'TEXTAREA', label: 'Long Text', icon: '📄', description: 'Multi-line text area' },
-    { type: 'EMAIL', label: 'Email', icon: '📧', description: 'Email address input' },
+    { type: 'TEXT', label: 'Text', icon: '📝', description: 'Single line text input' },
     { type: 'NUMBER', label: 'Number', icon: '🔢', description: 'Numeric input' },
-    { type: 'PHONE', label: 'Phone', icon: '📞', description: 'Phone number input' },
-    { type: 'DATE', label: 'Date', icon: '📅', description: 'Date picker' },
-    { type: 'TIME', label: 'Time', icon: '⏰', description: 'Time picker' },
+    { type: 'EMAIL', label: 'Email', icon: '�', description: 'Email address input' },
     { type: 'MULTIPLE_CHOICE', label: 'Multiple Choice', icon: '⚪', description: 'Single selection from options' },
-    { type: 'CHECKBOXES', label: 'Checkboxes', icon: '☑️', description: 'Multiple selections' },
-    { type: 'DROPDOWN', label: 'Dropdown', icon: '📋', description: 'Dropdown selection' },
-    { type: 'FILE_UPLOAD', label: 'File Upload', icon: '📎', description: 'File attachment' },
-    { type: 'URL', label: 'Website URL', icon: '🔗', description: 'URL input' },
-    { type: 'STAR_RATING', label: 'Star Rating', icon: '⭐', description: 'Star rating scale' }
+    { type: 'CHECKBOX', label: 'Checkboxes', icon: '☑️', description: 'Multiple selections' },
+    { type: 'SINGLE_CHOICE', label: 'Single Choice', icon: '�', description: 'Radio button selection' },
+    { type: 'FILE', label: 'File Upload', icon: '📎', description: 'File attachment' },
+    { type: 'DATE', label: 'Date', icon: '�', description: 'Date picker' },
+    { type: 'STAR_RATING', label: 'Star Rating', icon: '⭐', description: 'Star rating scale' },
+    { type: 'DROPDOWN', label: 'Dropdown', icon: '📋', description: 'Dropdown selection' }
   ];
 
   if (isPreviewMode) {
@@ -208,7 +205,6 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
           </div>
         </div>
         
-        {/* Preview Content */}
         <div className="container-width pt-56 pb-12">
           <FormPreview form={formData} />
         </div>
@@ -218,7 +214,6 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Fixed Header Bar */}
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-40" style={{ top: '80px' }}>
         <div className="container-width py-4">
           <div className="flex items-center justify-between">
