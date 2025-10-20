@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { formsAPI } from '../api/api';
 import FormPreview from './FormPreview';
 
 const FormSubmission = () => {
@@ -12,123 +13,11 @@ const FormSubmission = () => {
   useEffect(() => {
     const loadForm = async () => {
       try {
-        // You'll implement the API call here
-        const mockForm = {
-          id: '1',
-          title: 'Event Registration Form',
-          description: 'Please fill out this form to register for our upcoming hackathon. We need some basic information to process your registration.',
-          formUrl: formUrl,
-          isActive: true,
-          fields: [
-            {
-              id: 'field1',
-              label: 'Full Name',
-              fieldType: 'TEXT',
-              position: 1,
-              isRequired: true,
-              placeholder: 'Enter your full name',
-              helpText: 'Please provide your full legal name'
-            },
-            {
-              id: 'field2',
-              label: 'Email Address',
-              fieldType: 'EMAIL',
-              position: 2,
-              isRequired: true,
-              placeholder: 'your.email@example.com',
-              helpText: 'We will send confirmation details to this email'
-            },
-            {
-              id: 'field3',
-              label: 'Phone Number',
-              fieldType: 'PHONE',
-              position: 3,
-              isRequired: false,
-              placeholder: '+1 (555) 123-4567',
-              helpText: 'Optional - for urgent communications only'
-            },
-            {
-              id: 'field4',
-              label: 'Experience Level',
-              fieldType: 'MULTIPLE_CHOICE',
-              position: 4,
-              isRequired: true,
-              options: [
-                { label: 'Beginner (0-1 years)', value: 'beginner' },
-                { label: 'Intermediate (2-5 years)', value: 'intermediate' },
-                { label: 'Advanced (5+ years)', value: 'advanced' }
-              ],
-              helpText: 'Select your programming experience level'
-            },
-            {
-              id: 'field5',
-              label: 'Programming Languages',
-              fieldType: 'CHECKBOXES',
-              position: 5,
-              isRequired: false,
-              options: [
-                { label: 'JavaScript', value: 'javascript' },
-                { label: 'Python', value: 'python' },
-                { label: 'Java', value: 'java' },
-                { label: 'C++', value: 'cpp' },
-                { label: 'Go', value: 'go' },
-                { label: 'Rust', value: 'rust' }
-              ],
-              helpText: 'Select all languages you are comfortable with'
-            },
-            {
-              id: 'field6',
-              label: 'Preferred Team Size',
-              fieldType: 'DROPDOWN',
-              position: 6,
-              isRequired: true,
-              options: [
-                { label: 'Solo (1 person)', value: '1' },
-                { label: 'Pair (2 people)', value: '2' },
-                { label: 'Small team (3-4 people)', value: '3-4' },
-                { label: 'Large team (5+ people)', value: '5+' }
-              ]
-            },
-            {
-              id: 'field7',
-              label: 'Resume/Portfolio',
-              fieldType: 'FILE_UPLOAD',
-              position: 7,
-              isRequired: false,
-              helpText: 'Upload your resume or portfolio (PDF format preferred)'
-            },
-            {
-              id: 'field8',
-              label: 'Why do you want to participate?',
-              fieldType: 'TEXTAREA',
-              position: 8,
-              isRequired: true,
-              placeholder: 'Tell us what motivates you to join this hackathon...',
-              helpText: 'Share your goals and what you hope to achieve'
-            },
-            {
-              id: 'field9',
-              label: 'Event Date',
-              fieldType: 'DATE',
-              position: 9,
-              isRequired: true,
-              helpText: 'Select your preferred event date'
-            },
-            {
-              id: 'field10',
-              label: 'Rate your excitement level',
-              fieldType: 'STAR_RATING',
-              position: 10,
-              isRequired: false,
-              helpText: 'How excited are you about this event?'
-            }
-          ]
-        };
-
-        setForm(mockForm);
+        const response = await formsAPI.getFormForDisplay(formUrl);
+        setForm(response.form);
       } catch (err) {
-        setError('Failed to load form. Please try again later.');
         console.error('Error loading form:', err);
+        setError('Form not found or no longer available');
       } finally {
         setLoading(false);
       }
@@ -141,15 +30,13 @@ const FormSubmission = () => {
 
   const handleSubmit = async (responses) => {
     try {
-      // You'll implement the API call here
-      console.log('Submitting form responses:', {
-        formUrl,
-        responses
-      });
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Convert responses to the format expected by backend
+      const answers = Object.entries(responses).map(([fieldId, answerValue]) => ({
+        fieldId: parseInt(fieldId),
+        answerValue: answerValue
+      }));
+
+      await formsAPI.submitFormResponse(formUrl, { answers });
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting form:', error);

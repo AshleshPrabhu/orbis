@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { formsAPI } from '../api/api';
 import Button from './Button';
 
 const FormsList = () => {
@@ -19,46 +20,15 @@ const FormsList = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Mock data - you'll replace this with API call
+  // Load forms from backend API
   useEffect(() => {
     const loadForms = async () => {
       try {
-        // You'll implement the API call here
-        const mockForms = [
-          {
-            id: '1',
-            title: 'Event Registration Form',
-            description: 'Registration form for upcoming hackathon',
-            formUrl: 'ABC123',
-            isActive: true,
-            createdAt: '2024-10-15T10:00:00Z',
-            updatedAt: '2024-10-18T14:30:00Z',
-            _count: { responses: 45 }
-          },
-          {
-            id: '2',
-            title: 'Feedback Survey',
-            description: 'Post-event feedback collection',
-            formUrl: 'DEF456',
-            isActive: false,
-            createdAt: '2024-10-10T09:00:00Z',
-            updatedAt: '2024-10-16T11:20:00Z',
-            _count: { responses: 23 }
-          },
-          {
-            id: '3',
-            title: 'Team Application Form',
-            description: 'Application form for team members',
-            formUrl: 'GHI789',
-            isActive: true,
-            createdAt: '2024-10-12T15:00:00Z',
-            updatedAt: '2024-10-17T16:45:00Z',
-            _count: { responses: 67 }
-          }
-        ];
-        setForms(mockForms);
+        const formsData = await formsAPI.getUserForms();
+        setForms(formsData);
       } catch (error) {
         console.error('Error loading forms:', error);
+        alert('Failed to load forms. Please try again.');
       } finally {
         setLoading(false);
       }
@@ -248,7 +218,7 @@ const FormsList = () => {
                         <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
                           <path d="M8 1a2.5 2.5 0 00-2.5 2.5V4h-1a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V5a1 1 0 00-1-1h-1v-.5A2.5 2.5 0 008 1zM6.5 3.5a1.5 1.5 0 113 0V4h-3v-.5zM5 5h6v7H5V5z"/>
                         </svg>
-                        <span className="font-medium">{form._count?.responses || 0}</span>
+                        <span className="font-medium">{form.responses?.length || 0}</span>
                         <span className="text-gray-500">responses</span>
                       </div>
                       <div className="text-xs text-gray-500">
@@ -273,7 +243,7 @@ const FormsList = () => {
                     >
                       View
                     </button>
-                    {form._count?.responses > 0 && (
+                    {(form.responses?.length > 0) && (
                       <button
                         onClick={() => handleViewResponses(form.id)}
                         className="px-3 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:text-black hover:bg-gray-50 transition-all"

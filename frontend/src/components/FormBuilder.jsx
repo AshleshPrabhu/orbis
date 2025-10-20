@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { formsAPI } from '../api/api';
 import FormFieldEditor from './FormFieldEditor';
 import FormPreview from './FormPreview';
 import Button from './Button';
@@ -144,7 +145,7 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
     setDraggedField(null);
   };
 
-  // Save form (placeholder - you'll implement the API call)
+  // Save form - Connected to backend API
   const handleSave = async () => {
     if (!formData.title.trim()) {
       alert('Please enter a form title');
@@ -153,8 +154,38 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
 
     setIsSaving(true);
     try {
-      // You'll implement the API call here
-      console.log('Saving form:', formData);
+      // Prepare data for backend
+      const formPayload = {
+        title: formData.title,
+        description: formData.description,
+        isEditable: false, // Can be made configurable
+        fields: formData.fields.map(field => ({
+          label: field.label,
+          fieldType: field.fieldType,
+          isRequired: field.isRequired || false,
+          allowMultiple: field.allowMultiple || false,
+          options: field.options ? JSON.stringify(field.options) : null,
+          position: field.position,
+          placeholder: field.placeholder || null,
+          helpText: field.helpText || null,
+          validation: field.validation ? JSON.stringify(field.validation) : null,
+          conditions: field.conditions ? JSON.stringify(field.conditions) : null
+        })),
+        contributors: formData.contributors || []
+      };
+
+      if (form) {
+        // Update existing form
+        await formsAPI.updateForm(form.id, formPayload);
+        alert('Form updated successfully!');
+      } else {
+        // Create new form
+        await formsAPI.createForm(formPayload);
+        alert('Form created successfully!');
+        // Redirect to forms list after creation
+        navigate('/forms');
+      }
+      
       onSave && onSave(formData);
     } catch (error) {
       console.error('Error saving form:', error);

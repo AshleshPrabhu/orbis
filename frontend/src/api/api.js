@@ -264,47 +264,47 @@ export const profileAPI = {
 
 export const formsAPI = {
   createForm: async (formData) => {
-    const response = await api.post('/forms', formData);
+    const response = await api.post('/api/forms', formData);
     return response.data;
   },
 
   getUserForms: async () => {
-    const response = await api.get('/forms/my-forms');
+    const response = await api.get('/api/forms/my-forms');
     return response.data;
   },
 
   getFormForManage: async (formUrl) => {
-    const response = await api.get(`/forms/manage/${formUrl}`);
+    const response = await api.get(`/api/forms/manage/${formUrl}`);
     return response.data;
   },
 
   getFormForDisplay: async (formUrl) => {
-    const response = await api.get(`/forms/display/${formUrl}`);
+    const response = await api.get(`/api/forms/display/${formUrl}`);
     return response.data;
   },
 
   updateForm: async (formId, formData) => {
-    const response = await api.put(`/forms/${formId}`, formData);
+    const response = await api.put(`/api/forms/${formId}`, formData);
     return response.data;
   },
 
   deleteForm: async (formId) => {
-    const response = await api.delete(`/forms/${formId}`);
+    const response = await api.delete(`/api/forms/${formId}`);
     return response.data;
   },
 
   submitFormResponse: async (formUrl, responseData) => {
-    const response = await api.post(`/forms/submit/${formUrl}`, responseData);
+    const response = await api.post(`/api/forms/submit/${formUrl}`, responseData);
     return response.data;
   },
 
   updateFormResponse: async (formUrl, responseData) => {
-    const response = await api.put(`/forms/submit/${formUrl}`, responseData);
+    const response = await api.put(`/api/forms/submit/${formUrl}`, responseData);
     return response.data;
   },
 
   getFormResponses: async (formUrl, credentials) => {
-    const response = await api.post(`/forms/responses/${formUrl}`, credentials);
+    const response = await api.post(`/api/forms/responses/${formUrl}`, credentials);
     return response.data;
   }
 };

@@ -12,6 +12,7 @@ import eventRoutes from './src/routes/events.js';
 import teamRoutes from './src/routes/teams.js';
 import projectRoutes from './src/routes/projects.js';
 import profileRoutes from './src/routes/profiles.js';
+import formRoutes from './src/routes/form.js';
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -32,6 +33,7 @@ app.use('/api/events', eventRoutes); // Remove checkJwt from public routes
 app.use('/api/teams', checkJwt, teamRoutes);
 app.use('/api/projects', checkJwt, projectRoutes);
 app.use('/api', checkJwt, profileRoutes); // Changed from '/api/profiles' to '/api' to match frontend calls
+app.use('/api/forms', checkJwt, formRoutes); // Add form routes
 
 // Error handling
 app.use(errorHandler);

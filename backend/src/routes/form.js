@@ -1,5 +1,5 @@
 import express from 'express';
-import { authenticateToken } from '../middleware/auth.js';
+import { ensureUser } from '../middleware/auth.js';
 import {
     createForm,
     updateForm,
@@ -14,11 +14,11 @@ import {
 
 const router = express.Router();
 
-router.post('/', authenticateToken, createForm);
-router.put('/:id', authenticateToken, updateForm);
-router.delete('/:id', authenticateToken, deleteForm);
-router.get('/my-forms', authenticateToken, getAllForms);
-router.get('/manage/:formUrl', authenticateToken, getFormByUrl);
+router.post('/', ensureUser, createForm);
+router.put('/:id', ensureUser, updateForm);
+router.delete('/:id', ensureUser, deleteForm);
+router.get('/my-forms', ensureUser, getAllForms);
+router.get('/manage/:formUrl', ensureUser, getFormByUrl);
 router.get('/display/:formUrl', getFormForDisplay);
 router.post('/submit/:formUrl', createFormResponse);
 router.put('/submit/:formUrl', updateFormResponse);

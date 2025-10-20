@@ -182,7 +182,7 @@ export const updateForm = async (req, res) => {
             if (!field.label || !field.fieldType || field.position === undefined)
                 return res.status(400).json({ error: "Each field must have 'label', 'fieldType' and 'position'" });
 
-            if (["MULTIPLE_CHOICE", "SINGLE_CHOICE", "DROPDOWN", "CHECKBOXES"].includes(field.fieldType)) {
+            if (["MULTIPLE_CHOICE", "SINGLE_CHOICE", "DROPDOWN", "CHECKBOX"].includes(field.fieldType)) {
                 let options = field.options;
                 if (typeof options === "string") options = JSON.parse(options);
                 if (!Array.isArray(options) || options.length < 2)

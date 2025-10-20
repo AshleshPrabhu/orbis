@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { formsAPI } from '../api/api';
 import FormBuilder from '../components/FormBuilder';
 
 const EditForm = () => {
@@ -11,42 +12,21 @@ const EditForm = () => {
   useEffect(() => {
     const loadForm = async () => {
       try {
-        // You'll implement the API call here
-        const mockForm = {
-          id: id,
-          title: 'Event Registration Form',
-          description: 'Registration form for upcoming hackathon',
-          formUrl: 'ABC123',
-          fields: [
-            {
-              id: 'field1',
-              label: 'Full Name',
-              fieldType: 'TEXT',
-              position: 1,
-              isRequired: true,
-              placeholder: 'Enter your full name'
-            },
-            {
-              id: 'field2',
-              label: 'Email Address',
-              fieldType: 'EMAIL',
-              position: 2,
-              isRequired: true,
-              placeholder: 'your.email@example.com'
-            }
-          ]
-        };
-        
-        setForm(mockForm);
+        const response = await formsAPI.getFormForManage(id);
+        setForm(response);
       } catch (error) {
         console.error('Error loading form:', error);
+        alert('Failed to load form for editing');
+        navigate('/forms');
       } finally {
         setLoading(false);
       }
     };
 
-    loadForm();
-  }, [id]);
+    if (id) {
+      loadForm();
+    }
+  }, [id, navigate]);
 
   const handleSave = (formData) => {
     console.log('Form updated:', formData);
