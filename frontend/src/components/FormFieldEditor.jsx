@@ -1,22 +1,6 @@
 import React, { useState } from 'react';
 import Button from './Button';
 
-// Helper functions for field types
-const getFieldIcon = (fieldType) => {
-  const icons = {
-    'TEXT': '📝',
-    'NUMBER': '🔢',
-    'EMAIL': '�',
-    'MULTIPLE_CHOICE': '⚪',
-    'CHECKBOX': '☑️',
-    'SINGLE_CHOICE': '�',
-    'FILE': '📎',
-    'DATE': '�',
-    'STAR_RATING': '⭐',
-    'DROPDOWN': '📋'
-  };
-  return icons[fieldType] || '❓';
-};
 
 const getFieldTypeName = (fieldType) => {
   const names = {
@@ -178,7 +162,6 @@ const FormFieldEditor = ({
       case 'FILE':
         return (
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <div className="text-3xl mb-2">📎</div>
             <div className="text-gray-600">Click or drag files here to upload</div>
             <div className="text-sm text-gray-400 mt-1">Max file size: 10MB</div>
           </div>
@@ -225,7 +208,6 @@ const FormFieldEditor = ({
             </svg>
           </div>
           <div className="flex items-center space-x-2">
-            <span className="text-lg">{getFieldIcon(field.fieldType)}</span>
             <span className="text-sm font-medium text-gray-700">
               {getFieldTypeName(field.fieldType)}
             </span>

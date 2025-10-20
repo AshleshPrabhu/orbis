@@ -165,16 +165,16 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
   };
 
   const fieldTypes = [
-    { type: 'TEXT', label: 'Text', icon: '📝', description: 'Single line text input' },
-    { type: 'NUMBER', label: 'Number', icon: '🔢', description: 'Numeric input' },
-    { type: 'EMAIL', label: 'Email', icon: '�', description: 'Email address input' },
-    { type: 'MULTIPLE_CHOICE', label: 'Multiple Choice', icon: '⚪', description: 'Single selection from options' },
-    { type: 'CHECKBOX', label: 'Checkboxes', icon: '☑️', description: 'Multiple selections' },
-    { type: 'SINGLE_CHOICE', label: 'Single Choice', icon: '�', description: 'Radio button selection' },
-    { type: 'FILE', label: 'File Upload', icon: '📎', description: 'File attachment' },
-    { type: 'DATE', label: 'Date', icon: '�', description: 'Date picker' },
-    { type: 'STAR_RATING', label: 'Star Rating', icon: '⭐', description: 'Star rating scale' },
-    { type: 'DROPDOWN', label: 'Dropdown', icon: '📋', description: 'Dropdown selection' }
+    { type: 'TEXT', label: 'Text', description: 'Single line text input' },
+    { type: 'NUMBER', label: 'Number', description: 'Numeric input' },
+    { type: 'EMAIL', label: 'Email', description: 'Email address input' },
+    { type: 'MULTIPLE_CHOICE', label: 'Multiple Choice', description: 'Single selection from options' },
+    { type: 'CHECKBOX', label: 'Checkboxes', description: 'Multiple selections' },
+    { type: 'SINGLE_CHOICE', label: 'Single Choice', description: 'Radio button selection' },
+    { type: 'FILE', label: 'File Upload', description: 'File attachment' },
+    { type: 'DATE', label: 'Date', description: 'Date picker' },
+    { type: 'STAR_RATING', label: 'Star Rating', description: 'Star rating scale' },
+    { type: 'DROPDOWN', label: 'Dropdown', description: 'Dropdown selection' }
   ];
 
   if (isPreviewMode) {
@@ -187,7 +187,6 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
               <div className="flex items-center space-x-4">
                 <div>
                   <h2 className="text-2xl font-semibold text-black flex items-center">
-                    <span className="mr-2">👁️</span>
                     Form Preview
                   </h2>
                   <p className="text-sm text-gray-500">See how your form will look to respondents</p>
@@ -233,7 +232,7 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
                 variant="secondary"
                 className="px-4 py-2"
               >
-                👁️ Preview
+                Preview
               </Button>
               <Button
                 onClick={handleSave}
@@ -241,7 +240,7 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
                 variant="primary"
                 className="px-6 py-2"
               >
-                {isSaving ? '⏳ Saving...' : '💾 Save Form'}
+                {isSaving ? 'Saving...' : 'Save Form'}
               </Button>
               {onCancel && (
                 <Button
@@ -266,7 +265,6 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-56">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <h3 className="text-sm font-semibold text-black flex items-center">
-                  <span className="mr-2">🧩</span>
                   Form Elements
                 </h3>
               </div>
@@ -278,9 +276,6 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
                       onClick={() => addField(fieldType.type)}
                       className="w-full group flex items-center space-x-3 p-3 text-left border border-gray-200 rounded-lg hover:border-black hover:bg-gray-50 transition-all duration-200 hover:shadow-sm"
                     >
-                      <span className="text-lg group-hover:scale-110 transition-transform flex-shrink-0">
-                        {fieldType.icon}
-                      </span>
                       <div className="flex-1 min-w-0">
                         <div className="text-sm font-medium text-black">
                           {fieldType.label}
@@ -370,7 +365,6 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-56">
               <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
                 <h3 className="text-sm font-semibold text-black flex items-center">
-                  <span className="mr-2">⚙️</span>
                   Form Settings
                 </h3>
               </div>
