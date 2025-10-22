@@ -1,10 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Button from './Button';
 
-const FormPreview = ({ form, isPublic = false, onSubmit }) => {
+const FormPreview = ({ 
+  form, 
+  isPublic = false, 
+  onSubmit, 
+  existingResponse = null, 
+  submitButtonText = null,
+  disabled = false 
+}) => {
   const [responses, setResponses] = useState({});
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Pre-fill form with existing response data
+  useEffect(() => {
+    if (existingResponse && existingResponse.answers) {
+      const prefillData = {};
+      existingResponse.answers.forEach(answer => {
+        // Handle JSON responses (like arrays for checkboxes)
+        if (answer.answerJson) {
+          try {
+            prefillData[answer.fieldId] = JSON.parse(answer.answerJson);
+          } catch {
+            prefillData[answer.fieldId] = answer.answerValue;
+          }
+        } else {
+          prefillData[answer.fieldId] = answer.answerValue;
+        }
+      });
+      setResponses(prefillData);
+    }
+  }, [existingResponse]);
 
   const handleFieldChange = (fieldId, value) => {
     setResponses(prev => ({
@@ -261,6 +288,17 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
         {/* Form Header */}
         <div className="p-8 border-b border-gray-100">
+          {existingResponse && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center text-blue-800">
+                <span className="text-lg mr-2">✏️</span>
+                <span className="font-medium">Editing Your Response</span>
+              </div>
+              <p className="text-blue-600 text-sm mt-1">
+                Your previous answers have been loaded. Make any changes and submit to update.
+              </p>
+            </div>
+          )}
           <h1 className="text-3xl font-semibold text-black mb-3">
             {form.title || 'Untitled Form'}
           </h1>
@@ -309,11 +347,14 @@ const FormPreview = ({ form, isPublic = false, onSubmit }) => {
             <div className="mt-10 pt-6 border-t border-gray-100">
               <Button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={isSubmitting || disabled}
                 variant="primary"
                 className="w-full py-4 text-lg"
               >
-                {isSubmitting ? 'Submitting...' : 'Submit Form'}
+                {isSubmitting 
+                  ? 'Submitting...' 
+                  : submitButtonText || (existingResponse ? 'Update Response' : 'Submit Form')
+                }
               </Button>
             </div>
           )}

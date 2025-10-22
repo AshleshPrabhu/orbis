@@ -1,24 +1,31 @@
 import express from 'express';
-import { ensureUser } from '../middleware/auth.js';
+import { ensureUser, checkJwt } from '../middleware/auth.js';
 import {
     createForm,
     updateForm,
     deleteForm,
     getAllForms,
     getFormByUrl,
+    getFormById,
     getFormForDisplay,
     createFormResponse,
     updateFormResponse,
-    getFormResponses
+    getFormResponses,
+    getFormResponsesById
 } from '../controllers/form.js';
 
 const router = express.Router();
 
-router.post('/', ensureUser, createForm);
-router.put('/:id', ensureUser, updateForm);
-router.delete('/:id', ensureUser, deleteForm);
-router.get('/my-forms', ensureUser, getAllForms);
-router.get('/manage/:formUrl', ensureUser, getFormByUrl);
+// Protected routes (require authentication)
+router.post('/', checkJwt, ensureUser, createForm);
+router.put('/:id', checkJwt, ensureUser, updateForm);
+router.delete('/:id', checkJwt, ensureUser, deleteForm);
+router.get('/my-forms', checkJwt, ensureUser, getAllForms);
+router.get('/manage/:formUrl', checkJwt, ensureUser, getFormByUrl);
+router.get('/edit/:formId', checkJwt, ensureUser, getFormById);
+router.get('/responses/:formId', checkJwt, ensureUser, getFormResponsesById);
+
+// Public routes (no authentication required)
 router.get('/display/:formUrl', getFormForDisplay);
 router.post('/submit/:formUrl', createFormResponse);
 router.put('/submit/:formUrl', updateFormResponse);

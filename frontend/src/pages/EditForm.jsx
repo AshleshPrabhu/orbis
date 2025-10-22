@@ -12,11 +12,19 @@ const EditForm = () => {
   useEffect(() => {
     const loadForm = async () => {
       try {
-        const response = await formsAPI.getFormForManage(id);
-        setForm(response);
+        console.log('Loading form for editing with ID:', id);
+        const response = await formsAPI.getFormForEdit(id);
+        console.log('Form loaded successfully:', response);
+        
+        // Handle both old and new response format
+        const formData = response.success ? response : response.data || response;
+        setForm(formData);
       } catch (error) {
         console.error('Error loading form:', error);
-        alert('Failed to load form for editing');
+        console.error('Error details:', error.response?.data);
+        
+        const errorMsg = error.response?.data?.message || error.message || 'Failed to load form for editing';
+        alert(`Error: ${errorMsg}`);
         navigate('/forms');
       } finally {
         setLoading(false);

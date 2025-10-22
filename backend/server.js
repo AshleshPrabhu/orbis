@@ -27,19 +27,19 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
-// Mount routes
+// Mount routes - IMPORTANT: Mount specific routes BEFORE generic ones
 app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes); // Remove checkJwt from public routes
+app.use('/api/events', eventRoutes); // Public routes
+app.use('/api/forms', formRoutes); // Form routes - mix of public and protected routes (MUST be before /api)
 app.use('/api/teams', checkJwt, teamRoutes);
 app.use('/api/projects', checkJwt, projectRoutes);
-app.use('/api', checkJwt, profileRoutes); // Changed from '/api/profiles' to '/api' to match frontend calls
-app.use('/api/forms', checkJwt, formRoutes); // Add form routes
+app.use('/api', checkJwt, profileRoutes); // Generic /api route with auth (MUST be last)
 
 // Error handling
 app.use(errorHandler);
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`- Local: http://localhost:${PORT}`);
   if (process.env.SERVER_URL) {

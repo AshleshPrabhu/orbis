@@ -270,11 +270,17 @@ export const formsAPI = {
 
   getUserForms: async () => {
     const response = await api.get('/api/forms/my-forms');
-    return response.data;
+    // Handle both old and new response format
+    return response.data.data || response.data;
   },
 
   getFormForManage: async (formUrl) => {
     const response = await api.get(`/api/forms/manage/${formUrl}`);
+    return response.data;
+  },
+
+  getFormForEdit: async (formId) => {
+    const response = await api.get(`/api/forms/edit/${formId}`);
     return response.data;
   },
 
@@ -305,6 +311,11 @@ export const formsAPI = {
 
   getFormResponses: async (formUrl, credentials) => {
     const response = await api.post(`/api/forms/responses/${formUrl}`, credentials);
+    return response.data;
+  },
+
+  getFormResponsesById: async (formId) => {
+    const response = await api.get(`/api/forms/responses/${formId}`);
     return response.data;
   }
 };

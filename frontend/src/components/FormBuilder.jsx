@@ -22,7 +22,8 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
     title: '',
     description: '',
     fields: [],
-    contributors: []
+    contributors: [],
+    isEditable: false
   });
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -36,7 +37,8 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
         title: form.title || '',
         description: form.description || '',
         fields: form.fields || [],
-        contributors: form.contributors || []
+        contributors: form.contributors || [],
+        isEditable: form.isEditable || false
       });
     }
   }, [form]);
@@ -56,7 +58,7 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
       isRequired: false,
       placeholder: '',
       helpText: '',
-      options: ['MULTIPLE_CHOICE', 'DROPDOWN', 'CHECKBOXES', 'SINGLE_CHOICE'].includes(fieldType) ? 
+      options: ['MULTIPLE_CHOICE', 'DROPDOWN', 'CHECKBOX', 'SINGLE_CHOICE'].includes(fieldType) ? 
         [{ label: 'Option 1', value: 'option1' }, { label: 'Option 2', value: 'option2' }] : null,
       validation: null,
       conditions: null
@@ -158,7 +160,7 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
       const formPayload = {
         title: formData.title,
         description: formData.description,
-        isEditable: false, // Can be made configurable
+        isEditable: formData.isEditable,
         fields: formData.fields.map(field => ({
           label: field.label,
           fieldType: field.fieldType,
@@ -174,22 +176,25 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
         contributors: formData.contributors || []
       };
 
+      let result;
       if (form) {
         // Update existing form
-        await formsAPI.updateForm(form.id, formPayload);
+        result = await formsAPI.updateForm(form.id, formPayload);
         alert('Form updated successfully!');
       } else {
         // Create new form
-        await formsAPI.createForm(formPayload);
-        alert('Form created successfully!');
+        result = await formsAPI.createForm(formPayload);
+        alert(`Form created successfully! ${result.data ? `Form URL: ${result.data.fullUrl}` : ''}`);
         // Redirect to forms list after creation
         navigate('/forms');
       }
       
-      onSave && onSave(formData);
+      onSave && onSave(result.data || formData);
     } catch (error) {
       console.error('Error saving form:', error);
-      alert('Failed to save form. Please try again.');
+      // Display more specific error message
+      const errorMsg = error.response?.data?.message || error.message || 'Failed to save form';
+      alert(`Error: ${errorMsg}`);
     } finally {
       setIsSaving(false);
     }
@@ -418,7 +423,28 @@ const FormBuilder = ({ form = null, onSave, onCancel }) => {
                   </div>
 
                   <div className="border-t border-gray-200 pt-4">
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Form Settings */}
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+                          Form Settings
+                        </label>
+                        <div className="space-y-3">
+                          <label className="flex items-center">
+                            <input
+                              type="checkbox"
+                              checked={formData.isEditable || false}
+                              onChange={(e) => setFormData(prev => ({ ...prev, isEditable: e.target.checked }))}
+                              className="rounded border-gray-300 text-black focus:ring-black focus:ring-offset-0 focus:ring-1"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">Allow response editing</span>
+                          </label>
+                          <p className="text-xs text-gray-500 ml-6">
+                            Users can edit their responses after submission
+                          </p>
+                        </div>
+                      </div>
+
                       <div>
                         <label className="block text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
                           Created By

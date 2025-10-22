@@ -22,6 +22,8 @@ import FormsPage from './pages/FormsPage';
 import CreateForm from './pages/CreateForm';
 import EditForm from './pages/EditForm';
 import FormSubmission from './components/FormSubmission';
+import FormEdit from './components/FormEdit';
+import FormResponses from './components/FormResponses';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, isLoading, user } = useAuth();
@@ -130,8 +132,18 @@ const App = () => {
                     </ProtectedRoute>
                   } 
                 />
+                <Route 
+                  path="/forms/:formId/responses" 
+                  element={
+                    <ProtectedRoute>
+                      <FormResponses />
+                    </ProtectedRoute>
+                  } 
+                />
                 {/* Public form submission route */}
                 <Route path="/form/:formUrl" element={<FormSubmission />} />
+                {/* Public form edit route */}
+                <Route path="/form/:formUrl/edit" element={<FormEdit />} />
               </Routes>
             </main>
             <Footer />
