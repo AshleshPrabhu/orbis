@@ -10,9 +10,8 @@ const FormsList = () => {
   const [forms, setForms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState('all'); // all, active, inactive
+  const [filter, setFilter] = useState('all'); 
 
-  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
@@ -20,19 +19,17 @@ const FormsList = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Load forms from backend API
   useEffect(() => {
     const loadForms = async () => {
       try {
         const formsData = await formsAPI.getUserForms();
-        // Handle array response (new format) or fallback to empty array
         const formsList = Array.isArray(formsData) ? formsData : [];
         setForms(formsList);
       } catch (error) {
         console.error('Error loading forms:', error);
         const errorMsg = error.response?.data?.message || 'Failed to load forms';
         alert(`Error: ${errorMsg}`);
-        setForms([]); // Set empty array on error
+        setForms([]);
       } finally {
         setLoading(false);
       }
@@ -43,7 +40,6 @@ const FormsList = () => {
     }
   }, [isAuthenticated]);
 
-  // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
   }

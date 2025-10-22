@@ -75,7 +75,6 @@ export const createForm = async (req,res)=>{
                 if(!field.fieldType || !field.label ||!field.position){
                     return res.status(400).json({ error: "Each field must have 'fieldType' , 'label' and 'position'." });
                 }
-                // Validate field type
                 const validFieldTypes = ["TEXT", "NUMBER", "EMAIL", "MULTIPLE_CHOICE", "CHECKBOX", "SINGLE_CHOICE", "FILE", "DATE", "STAR_RATING", "DROPDOWN"];
                 if (!validFieldTypes.includes(field.fieldType)) {
                     return res.status(400).json({ error: `Invalid field type: ${field.fieldType}` });
@@ -132,7 +131,7 @@ export const createForm = async (req,res)=>{
                     createdBy: user.id, 
                     formUrl, 
                     isEditable,
-                    isActive: true // Ensure form is active by default
+                    isActive: true 
                 },
             });
 
@@ -167,7 +166,6 @@ export const createForm = async (req,res)=>{
             return form;
         });
 
-        // Generate full form URL for sharing
         const fullFormUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/form/${formData.formUrl}`;
 
         res.status(201).json({
@@ -446,7 +444,6 @@ export const getAllForms = async (req, res) => {
             }
         });
 
-        // Format response to include computed fields
         const formattedForms = forms.map(form => ({
             ...form,
             fieldsCount: form.fields.length,
@@ -679,7 +676,7 @@ export const getFormForDisplay = async (req, res) => {
         const formattedFields = form.fields.map(field => ({
             id: field.id,
             label: field.label,
-            fieldType: field.fieldType, // Keep as fieldType, not type
+            fieldType: field.fieldType,  
             isRequired: field.isRequired,
             placeholder: field.placeholder || '',
             helpText: field.helpText || '',
@@ -723,7 +720,6 @@ export const createFormResponse = async (req, res) => {
         console.log('Submitted by:', submittedBy || 'Anonymous');
         console.log('Answers count:', answers ? answers.length : 0);
         
-        // Debug: Log all received field IDs
         if (answers) {
             console.log('Received answers with field IDs:', answers.map(a => ({ 
                 fieldId: a.fieldId, 
@@ -752,7 +748,6 @@ export const createFormResponse = async (req, res) => {
             });
         }
 
-        // Debug: Log form field IDs
         console.log('Form field IDs:', form.fields.map(f => ({ id: f.id, type: typeof f.id })));
 
         if (!Array.isArray(answers) || answers.length === 0) {
@@ -762,14 +757,13 @@ export const createFormResponse = async (req, res) => {
             });
         }
 
-        // Generate anonymous ID for anonymous submissions that might need editing later
         const anonymousId = crypto.randomBytes(6).toString('hex').toUpperCase();
 
         const response = await prisma.formResponse.create({
             data: {
                 formId: form.id,
                 submittedBy: submittedBy || null,
-                anonymousId: !submittedBy ? anonymousId : null, // Only set for anonymous submissions
+                anonymousId: !submittedBy ? anonymousId : null, 
             },
         });
 
@@ -778,7 +772,6 @@ export const createFormResponse = async (req, res) => {
         const fieldAnswersData = [];
 
         for (const ans of answers) {
-            // Convert fieldId to number for comparison since database IDs are integers
             const fieldId = parseInt(ans.fieldId, 10);
             const field = form.fields.find(f => f.id === fieldId);
             if (!field) {
@@ -786,7 +779,7 @@ export const createFormResponse = async (req, res) => {
             }
 
             const allowedValues = Array.isArray(field.options)
-            ? field.options
+            ? field.options.map(opt => typeof opt === 'object' && opt.value ? opt.value : opt)
             : field.options?.values || [];
 
             if (["TEXT"].includes(field.fieldType)) {
@@ -799,8 +792,8 @@ export const createFormResponse = async (req, res) => {
                     return res.status(400).json({ error: `Invalid option for "${field.label}".` });
                 }
             } 
-            else if (["MULTIPLE_CHOICE", "CHECKBOXES"].includes(field.fieldType)) {
-                const allowMultiple = field.allowMultiple ?? true;
+            else if (["MULTIPLE_CHOICE", "CHECKBOX"].includes(field.fieldType)) {
+                const allowMultiple = field.fieldType === "CHECKBOX" ? true : (field.allowMultiple ?? true);
                 const selections = Array.isArray(ans.answerJson)
                 ? ans.answerJson
                 : ans.answerValue
@@ -832,7 +825,7 @@ export const createFormResponse = async (req, res) => {
             fieldAnswersData.push({
                 responseId: response.id,
                 fieldId: field.id,
-                answerValue: ans.answerValue ?? null,
+                answerValue: ans.answerValue !== null && ans.answerValue !== undefined ? String(ans.answerValue) : null,
             });
         }
 
@@ -843,14 +836,12 @@ export const createFormResponse = async (req, res) => {
 
         console.log('Form response submitted successfully');
 
-        // Prepare response data
         const responseData = {
             success: true,
             message: "Form response submitted successfully",
             responseId: response.id,
         };
 
-        // Include anonymous ID and edit info for editable forms
         if (form.isEditable && !submittedBy) {
             responseData.anonymousId = anonymousId;
             responseData.editUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/form/${formUrl}/edit/${anonymousId}`;
@@ -912,15 +903,13 @@ export const updateFormResponse = async (req, res) => {
         const fieldAnswersData = [];
 
         for (const ans of answers) {
-        // Convert fieldId to number for comparison since database IDs are integers
         const fieldId = parseInt(ans.fieldId, 10);
         const field = form.fields.find(f => f.id === fieldId);
         if (!field) {
             return res.status(400).json({ error: `Invalid fieldId: ${ans.fieldId}` });
         }
-
         const allowedValues = Array.isArray(field.options)
-            ? field.options
+            ? field.options.map(opt => typeof opt === 'object' && opt.value ? opt.value : opt)
             : field.options?.values || [];
 
         if (["TEXT"].includes(field.fieldType)) {
@@ -933,8 +922,8 @@ export const updateFormResponse = async (req, res) => {
                 return res.status(400).json({ error: `Invalid option for "${field.label}".` });
             }
         } 
-        else if (["MULTIPLE_CHOICE", "CHECKBOXES"].includes(field.fieldType)) {
-            const allowMultiple = field.allowMultiple ?? true;
+        else if (["MULTIPLE_CHOICE", "CHECKBOX"].includes(field.fieldType)) {
+            const allowMultiple = field.fieldType === "CHECKBOX" ? true : (field.allowMultiple ?? true);
             const selections = Array.isArray(ans.answerJson)
             ? ans.answerJson
             : ans.answerValue
@@ -966,7 +955,7 @@ export const updateFormResponse = async (req, res) => {
         fieldAnswersData.push({
             responseId: response.id,
             fieldId: field.id,
-            answerValue: ans.answerValue ?? null,
+            answerValue: ans.answerValue !== null && ans.answerValue !== undefined ? String(ans.answerValue) : null,
         });
         }
 
@@ -1057,7 +1046,6 @@ export const getFormResponses = async (req, res) => {
     }
 };
 
-// Get all responses for a form by form ID (for form creators/contributors)
 export const getFormResponsesById = async (req, res) => {
     try {
         const { formId } = req.params;
@@ -1066,7 +1054,6 @@ export const getFormResponsesById = async (req, res) => {
         console.log('Form ID:', formId);
         console.log('Requested by user:', req.user?.id);
 
-        // Get the form and check permissions
         const form = await prisma.form.findUnique({
             where: { id: formId },
             include: {
@@ -1081,7 +1068,6 @@ export const getFormResponsesById = async (req, res) => {
             return res.status(404).json({ error: 'Form not found' });
         }
 
-        // Check if user is the creator or a contributor
         const isCreator = form.createdBy === req.user.id;
         const isContributor = form.contributors.some(c => c.userId === req.user.id);
         
@@ -1089,7 +1075,6 @@ export const getFormResponsesById = async (req, res) => {
             return res.status(403).json({ error: 'Not authorized to view responses' });
         }
 
-        // Get all responses for this form
         const responses = await prisma.formResponse.findMany({
             where: { formId },
             include: {

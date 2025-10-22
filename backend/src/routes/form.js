@@ -16,7 +16,6 @@ import {
 
 const router = express.Router();
 
-// Protected routes (require authentication)
 router.post('/', checkJwt, ensureUser, createForm);
 router.put('/:id', checkJwt, ensureUser, updateForm);
 router.delete('/:id', checkJwt, ensureUser, deleteForm);
@@ -25,7 +24,6 @@ router.get('/manage/:formUrl', checkJwt, ensureUser, getFormByUrl);
 router.get('/edit/:formId', checkJwt, ensureUser, getFormById);
 router.get('/responses/:formId', checkJwt, ensureUser, getFormResponsesById);
 
-// Public routes (no authentication required)
 router.get('/display/:formUrl', getFormForDisplay);
 router.post('/submit/:formUrl', createFormResponse);
 router.put('/submit/:formUrl', updateFormResponse);

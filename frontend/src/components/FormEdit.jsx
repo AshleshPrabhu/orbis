@@ -76,10 +76,22 @@ const FormEdit = () => {
     setIsUpdating(true);
     try {
       // Convert responses to the format expected by backend
-      const answers = Object.entries(responses).map(([fieldId, answerValue]) => ({
-        fieldId: fieldId, // Keep as string - database field IDs are strings
-        answerValue: answerValue
-      }));
+      const answers = responses.map(({ fieldId, value }) => {
+        // Handle arrays (for CHECKBOX, MULTIPLE_CHOICE)
+        if (Array.isArray(value)) {
+          return {
+            fieldId: fieldId.toString(), // Ensure it's a string
+            answerJson: value,
+            answerValue: null
+          };
+        }
+        // Handle single values (for TEXT, DROPDOWN, etc.)
+        return {
+          fieldId: fieldId.toString(), // Ensure it's a string
+          answerValue: value,
+          answerJson: null
+        };
+      });
 
       await formsAPI.updateFormResponse(formUrl, { 
         answers,

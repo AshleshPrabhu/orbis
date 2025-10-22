@@ -35,13 +35,22 @@ const FormSubmission = () => {
 
   const handleSubmit = async (responsesArray) => {
     try {
-      // responsesArray comes as [{fieldId: 11, value: 'answer'}, ...]
-      // Convert to backend format
-      const answers = responsesArray.map(({ fieldId, value }) => ({
-        fieldId: fieldId.toString(), // Ensure it's a string
-        answerValue: value
-      }));
+      const answers = responsesArray.map(({ fieldId, value }) => {
+        if (Array.isArray(value)) {
+          return {
+            fieldId: fieldId.toString(), 
+            answerJson: value,
+            answerValue: null
+          };
+        }
+        return {
+          fieldId: fieldId.toString(), 
+          answerValue: value,
+          answerJson: null
+        };
+      });
 
+      console.log('Sending to backend:', { answers });
       const result = await formsAPI.submitFormResponse(formUrl, { answers });
       console.log('Submission result:', result);
       
@@ -49,7 +58,7 @@ const FormSubmission = () => {
       setIsSubmitted(true);
     } catch (error) {
       console.error('Error submitting form:', error);
-      throw error; // Re-throw to be handled by FormPreview
+      throw error;
     }
   };
 

@@ -13,12 +13,10 @@ const FormPreview = ({
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Pre-fill form with existing response data
   useEffect(() => {
     if (existingResponse && existingResponse.answers) {
       const prefillData = {};
       existingResponse.answers.forEach(answer => {
-        // Handle JSON responses (like arrays for checkboxes)
         if (answer.answerJson) {
           try {
             prefillData[answer.fieldId] = JSON.parse(answer.answerJson);
@@ -39,7 +37,6 @@ const FormPreview = ({
       [fieldId]: value
     }));
     
-    // Clear error when user starts typing
     if (errors[fieldId]) {
       setErrors(prev => ({
         ...prev,
@@ -75,7 +72,6 @@ const FormPreview = ({
         value: responses[field.id] || null
       }));
 
-      // You'll implement the API call here
       console.log('Submitting responses:', formattedResponses);
       onSubmit && onSubmit(formattedResponses);
     } catch (error) {
